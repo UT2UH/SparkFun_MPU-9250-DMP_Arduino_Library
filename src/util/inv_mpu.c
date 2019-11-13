@@ -37,7 +37,7 @@
  * min(int a, int b)
  */
 #include <Arduino.h>
-#define MPU9250
+//#define MPU9250
 #include "arduino_mpu9250_i2c.h"
 #include "arduino_mpu9250_clk.h"
 #define i2c_write(a, b, c, d) arduino_i2c_write(a, b, c, d)
@@ -56,7 +56,7 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 }
 
 #if !defined MPU6050 && !defined MPU9150 && !defined MPU6500 && !defined MPU9250
-#error  Which gyro are you using? Define MPUxxxx in your compiler options.
+#define ICM20689
 #endif
 
 /* Time for some messy macro work. =]
@@ -69,6 +69,10 @@ static inline int reg_int_cb(struct int_param_s *int_param)
  * is equivalent to..
  * #define MPU6500
  * #define AK8963_SECONDARY
+ * 
+ * #define ICM20689
+ * is equivalent to..
+ * #define ICM20689
  */
 #if defined MPU9150
 #ifndef MPU6050
@@ -79,7 +83,8 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 #elif !defined AK8975_SECONDARY /* #if defined AK8963_SECONDARY */
 #define AK8975_SECONDARY
 #endif                          /* #if defined AK8963_SECONDARY */
-#elif defined MPU9250           /* #if defined MPU9150 */
+
+#elif defined MPU9250           /* #if defined MPU9250 */
 #ifndef MPU6500
 #define MPU6500
 #endif                          /* #ifndef MPU6500 */
@@ -88,6 +93,8 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 #elif !defined AK8963_SECONDARY /* #if defined AK8975_SECONDARY */
 #define AK8963_SECONDARY
 #endif                          /* #if defined AK8975_SECONDARY */
+
+//if ICM-20689 defined
 #endif                          /* #if defined MPU9150 */
 
 #if defined AK8975_SECONDARY || defined AK8963_SECONDARY
@@ -111,6 +118,9 @@ struct gyro_reg_s {
     unsigned char accel_cfg2;
     unsigned char lp_accel_odr;
     unsigned char motion_thr;
+    unsigned char wom_x_thr;
+    unsigned char wom_y_thr;
+    unsigned char wom_z_thr;
     unsigned char motion_dur;
     unsigned char fifo_count_h;
     unsigned char fifo_r_w;
@@ -239,7 +249,7 @@ struct test_s {
     float min_g;
     float max_g;
     float max_accel_var;
-#ifdef MPU6500
+#if defined MPU6500 || defined ICM20689
     float max_g_offset;
     unsigned short sample_wait_ms;
 #endif
@@ -311,8 +321,18 @@ enum lp_accel_rate_e {
     INV_LPA_160HZ,
     INV_LPA_320HZ,
     INV_LPA_640HZ
+#elif defined ICM20689
+    INV_LPA_3_9HZ,
+    INV_LPA_7_8HZ,
+    INV_LPA_15_6HZ,
+    INV_LPA_31_3HZ,
+    INV_LPA_62_5HZ,
+    INV_LPA_125HZ,
+    INV_LPA_250HZ,
+    INV_LPA_500HZ    
 #endif
 };
+
 
 #define BIT_I2C_MST_VDDIO   (0x80)
 #define BIT_FIFO_EN         (0x40)
@@ -323,6 +343,7 @@ enum lp_accel_rate_e {
 #define BIT_DATA_RDY_EN     (0x01)
 #define BIT_DMP_INT_EN      (0x02)
 #define BIT_MOT_INT_EN      (0x40)
+#define BIT_WOM_INT_EN      (0xE0) //
 #define BITS_FSR            (0x18)
 #define BITS_LPF            (0x07)
 #define BITS_HPF            (0x07)
@@ -345,7 +366,7 @@ enum lp_accel_rate_e {
 #define BIT_LATCH_EN        (0x20)
 #define BIT_ANY_RD_CLR      (0x10)
 #define BIT_BYPASS_EN       (0x02)
-#define BITS_WOM_EN         (0xC0)
+#define BITS_WOM_EN         (0xC0) //
 #define BIT_LPA_CYCLE       (0x20)
 #define BIT_STBY_XA         (0x20)
 #define BIT_STBY_YA         (0x10)
@@ -470,6 +491,7 @@ static struct gyro_state_s st = {
     .hw = &hw,
     .test = &test
 };
+
 #elif defined MPU6500
 const struct gyro_reg_s reg = {
     .who_am_i       = 0x75,
@@ -552,10 +574,80 @@ static struct gyro_state_s st = {
     .hw = &hw,
     .test = &test
 };
+
+#elif defined ICM20689
+const struct gyro_reg_s reg = {
+    .who_am_i       = 0x75,
+    .rate_div       = 0x19,
+    .lpf            = 0x1A,
+    .prod_id        = 0x0C,
+    .user_ctrl      = 0x6A,
+    .fifo_en        = 0x23,
+    .gyro_cfg       = 0x1B,
+    .accel_cfg      = 0x1C,
+    .accel_cfg2     = 0x1D,
+    .lp_accel_odr   = 0x1E,
+    .motion_thr     = 0x1F,
+    .wom_x_thr      = 0x20,
+    .wom_y_thr      = 0x21,
+    .wom_z_thr      = 0x22,
+    .fifo_count_h   = 0x72,
+    .fifo_r_w       = 0x74,
+    .raw_gyro       = 0x43,
+    .raw_accel      = 0x3B,
+    .temp           = 0x41,
+    .int_enable     = 0x38,
+    .dmp_int_status = 0x39,
+    .int_status     = 0x3A,
+    .accel_intel    = 0x69,
+    .pwr_mgmt_1     = 0x6B,
+    .pwr_mgmt_2     = 0x6C,
+    .int_pin_cfg    = 0x37,
+    .mem_r_w        = 0x6F,
+    .accel_offs     = 0x77,
+    .i2c_mst        = 0x24,
+    .bank_sel       = 0x6D,
+    .mem_start_addr = 0x6E,
+    .prgm_start_h   = 0x70
+};
+
+const struct hw_s hw = {
+    .addr           = MPU_I2C_ADR,
+    .max_fifo       = 1024,
+    .num_reg        = 128,
+    .temp_sens      = 321,
+    .temp_offset    = 0,
+    .bank_size      = 256
+};
+
+const struct test_s test = {
+    .gyro_sens      = 32768/250,
+    .accel_sens     = 32768/2,  // FSR = +-2G = 16384 LSB/G
+    .reg_rate_div   = 0,        // 1kHz
+    .reg_lpf        = 2,        // 92Hz low pass filter
+    .reg_gyro_fsr   = 0,        // 250dps
+    .reg_accel_fsr  = 0x0,      // Accel FSR setting = 2g
+    .wait_ms        = 200,      // 200ms stabilization time
+    .packet_thresh  = 200,      // 200 samples
+    .min_dps        = 20.f,     // 20 dps for Gyro Criteria C
+    .max_dps        = 60.f,     // Must exceed 60 dps threshold for Gyro Criteria B
+    .max_gyro_var   = .5f,      // Must exceed +50% variation for Gyro Criteria A
+    .min_g          = .225f,    // Accel must exceed Min 225 mg for Criteria B
+    .max_g          = .675f,    // Accel cannot exceed Max 675 mg for Criteria B
+    .max_accel_var  = .5f,      // Accel must be within 50% variation for Criteria A
+    .max_g_offset   = .5f,      // 500 mg for Accel Criteria C
+    .sample_wait_ms = 10        // 10ms sample time wait
+};
+
+static struct gyro_state_s st = {
+    .reg = &reg,
+    .hw = &hw,
+    .test = &test
+};
 #endif
 
 #define MAX_PACKET_LENGTH (12)
-#ifdef MPU6500
+#if defined MPU6500 || defined ICM20689
 #define HWST_MAX_PACKET_LENGTH (512)
 #endif
 
@@ -664,7 +756,7 @@ int mpu_init(struct int_param_s *int_param)
 
    st.chip_cfg.accel_half = 0;
 
-#ifdef MPU6500
+#if defined MPU6500 || defined ICM20689
     /* MPU6500 shares 4kB of memory between the DMP and the FIFO. Since the
      * first 3kB are needed by the DMP, we'll use the last 1kB for the FIFO.
      */
@@ -2125,7 +2217,7 @@ static int get_st_biases(long *gyro, long *accel, unsigned char hw_test)
     return 0;
 }
 
-#ifdef MPU6500
+#if defined MPU6500 || defined ICM20689
 #define REG_6500_XG_ST_DATA     0x0
 #define REG_6500_XA_ST_DATA     0xD
 static const unsigned short mpu_6500_st_tb[256] = {
@@ -2675,7 +2767,7 @@ int mpu_run_self_test(long *gyro, long *accel)
         result |= 0x04;
 #endif
 restore:
-#elif defined MPU6500
+#elif defined MPU6500 || defined ICM20689
     /* For now, this function will return a "pass" result for all three sensors
      * for compatibility with current test applications.
      */
@@ -3209,7 +3301,7 @@ lp_int_restore:
     if (st.chip_cfg.cache.dmp_on)
         mpu_set_dmp_state(1);
 
-#ifdef MPU6500
+#if defined MPU6500
     /* Disable motion interrupt (MPU6500 version). */
     data[0] = 0;
     if (i2c_write(st.hw->addr, st.reg->accel_intel, 1, data))
@@ -3219,6 +3311,173 @@ lp_int_restore:
     st.chip_cfg.int_motion_only = 0;
     return 0;
 }
+
+/**
+ *  @brief      Enters LP accel motion interrupt mode.
+ *  The behaviour of this feature is very different between the MPU6050, MPU6500 and the
+ *  ICM20689. Each chip's version of this feature is explained below.
+ *
+ *  \n ICM20689:
+ *  \n Unlike the MPU6050 version, the hardware does not "lock in" a reference
+ *  sample. The hardware monitors the accel data and detects any large change
+ *  over a short period of time.
+ *
+ *  \n The hardware motion threshold can be between 4mg and 1020mg in 4mg
+ *  increments.
+ *
+ *  \n ICM20689 Low-power accel mode supports the following frequencies:
+ *  \n 1.25Hz, 2.5Hz, 5Hz, 10Hz, 20Hz, 40Hz, 80Hz, 160Hz, 320Hz, 640Hz
+ *
+ *  \n\n NOTES:
+ *  \n The driver will round down @e thresh to the nearest supported value if
+ *  an unsupported threshold is selected.
+ *  \n To select a fractional wake-up frequency, round down the value passed to
+ *  @e lpa_freq.
+ *  \n The ICM20689 does not support a delay parameter. If this function is used
+ *  for the ICM20689, the value passed to @e time will be ignored.
+ *  \n To disable this mode, set @e lpa_freq to zero. The driver will restore
+ *  the previous configuration.
+ *
+ *  @param[in]  thresh      Motion threshold in mg.
+ *  @param[in]  lpa_freq    Minimum sampling rate, or zero to disable.
+ *  @return     0 if successful.
+ */
+int icm_lp_motion_interrupt(unsigned short thresh, unsigned short lpa_freq)
+{
+    unsigned char data[3];
+
+    if (lpa_freq) {
+
+    	unsigned char thresh_hw;
+
+        /* 1LSb = 4mg. */
+        if (thresh > 1020)
+            thresh_hw = 255;
+        else if (thresh < 4)
+            thresh_hw = 1;
+        else
+            thresh_hw = thresh >> 2;
+
+        if (lpa_freq > 500)
+            /* At this point, the chip has not been re-configured, so the
+             * function can safely exit.
+             */
+            return -1;
+
+        if (!st.chip_cfg.int_motion_only) {
+            /* Store current settings for later. */
+            if (st.chip_cfg.dmp_on) {
+                mpu_set_dmp_state(0);
+                st.chip_cfg.cache.dmp_on = 1;
+            } else
+                st.chip_cfg.cache.dmp_on = 0;
+            mpu_get_gyro_fsr(&st.chip_cfg.cache.gyro_fsr);
+            mpu_get_accel_fsr(&st.chip_cfg.cache.accel_fsr);
+            mpu_get_lpf(&st.chip_cfg.cache.lpf);
+            mpu_get_sample_rate(&st.chip_cfg.cache.sample_rate);
+            st.chip_cfg.cache.sensors_on = st.chip_cfg.sensors;
+            mpu_get_fifo_config(&st.chip_cfg.cache.fifo_sensors);
+        }
+
+        /* Disable hardware interrupts. */
+        set_int_enable(0);
+
+        /* Step 1. Enter low-power accel-only mode, no FIFO/DMP. */
+        data[0] = 0;              // 0x6A
+        data[1] = 0;              // 0x6B
+        data[2] = BIT_STBY_XYZG;  // 0x6C TODO MSB DMP_LP_DIS?
+        if (i2c_write(st.hw->addr, st.reg->user_ctrl, 3, data))
+            goto lp_int_restore;
+
+        /* Step 2. Accelerometer Configuration. */
+        data[0] = 0x01;
+        if (i2c_write(st.hw->addr, st.reg->accel_cfg2, 1, data))
+            goto lp_int_restore;
+
+        /* Step 3. Enable interrupt. */
+        data[0] = BIT_WOM_INT_EN;
+        if (i2c_write(st.hw->addr, st.reg->int_enable, 1, data))
+            goto lp_int_restore;
+
+        /* Step 4. Set x,y,z motion threshold. */
+        data[0] = thresh_hw;
+        data[1] = thresh_hw;
+        data[2] = thresh_hw;                
+        if (i2c_write(st.hw->addr, st.reg->wom_x_thr, 3, data))
+            goto lp_int_restore;
+
+        /* Step 5. Enable motion interrupt (ICM20689 version). */
+        data[0] = BITS_WOM_EN;
+        if (i2c_write(st.hw->addr, st.reg->accel_intel, 1, data))
+            goto lp_int_restore;
+
+        /* Step 6. Set wake up frequency. */
+        if (lpa_freq <= 3)
+            data[0] = 255;
+        else if (lpa_freq <= 7)
+            data[0] = 127;
+        else if (lpa_freq <= 15)
+            data[0] = 63;
+        else if (lpa_freq <= 31)
+            data[0] = 31;
+        else if (lpa_freq <= 62)
+            data[0] = 15;
+        else if (lpa_freq <= 125)
+            data[0] = 7;
+        else if (lpa_freq <= 250)
+            data[0] = 3;
+        else
+            data[0] = 1;
+        if (i2c_write(st.hw->addr, st.reg->rate_div, 1, data))
+            goto lp_int_restore;
+
+        /* Step 7. Enable cycle mode. */
+        data[0] = BIT_LPA_CYCLE;
+        if (i2c_write(st.hw->addr, st.reg->pwr_mgmt_1, 1, data))
+            goto lp_int_restore;
+
+
+        st.chip_cfg.int_motion_only = 1;
+        return 0;
+    } else {
+        /* Don't "restore" the previous state if no state has been saved. */
+        unsigned int ii;
+        char *cache_ptr = (char*)&st.chip_cfg.cache;
+        for (ii = 0; ii < sizeof(st.chip_cfg.cache); ii++) {
+            if (cache_ptr[ii] != 0)
+                goto lp_int_restore;
+        }
+        /* If we reach this point, motion interrupt mode hasn't been used yet. */
+        return -1;
+    }
+lp_int_restore:
+    /* Set to invalid values to ensure no I2C writes are skipped. */
+    st.chip_cfg.gyro_fsr = 0xFF;
+    st.chip_cfg.accel_fsr = 0xFF;
+    st.chip_cfg.lpf = 0xFF;
+    st.chip_cfg.sample_rate = 0xFFFF;
+    st.chip_cfg.sensors = 0xFF;
+    st.chip_cfg.fifo_enable = 0xFF;
+    st.chip_cfg.clk_src = INV_CLK_PLL;
+    mpu_set_sensors(st.chip_cfg.cache.sensors_on);
+    mpu_set_gyro_fsr(st.chip_cfg.cache.gyro_fsr);
+    mpu_set_accel_fsr(st.chip_cfg.cache.accel_fsr);
+    mpu_set_lpf(st.chip_cfg.cache.lpf);
+    mpu_set_sample_rate(st.chip_cfg.cache.sample_rate);
+    mpu_configure_fifo(st.chip_cfg.cache.fifo_sensors);
+
+    if (st.chip_cfg.cache.dmp_on)
+        mpu_set_dmp_state(1);
+
+    /* Disable motion interrupt (ICM20689 version). */
+    data[0] = 0;
+    if (i2c_write(st.hw->addr, st.reg->accel_intel, 1, data))
+        goto lp_int_restore;
+
+    st.chip_cfg.int_motion_only = 0;
+    return 0;
+}
+
 
 /**
  *  @}

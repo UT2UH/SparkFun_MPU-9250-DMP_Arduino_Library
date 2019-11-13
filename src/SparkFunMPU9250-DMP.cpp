@@ -8,12 +8,6 @@ This library implements motion processing functions of Invensense's MPU-9250.
 It is based on their Emedded MotionDriver 6.12 library.
 	https://www.invensense.com/developers/software-downloads/
 
-Development environment specifics:
-Arduino IDE 1.6.12
-SparkFun 9DoF Razor IMU M0
-
-Supported Platforms:
-- ATSAMD21 (Arduino Zero, SparkFun SAMD21 Breakouts)
 ******************************************************************************/
 #include "SparkFunMPU9250-DMP.h"
 #include "MPU9250_RegisterMap.h"
@@ -40,8 +34,6 @@ inv_error_t MPU9250_DMP::begin(void)
 {
 	inv_error_t result;
     struct int_param_s int_param;
-	
-	Wire.begin();
 	
 	result = mpu_init(&int_param);
 	
@@ -277,6 +269,17 @@ inv_error_t MPU9250_DMP::updateFifo(void)
 inv_error_t MPU9250_DMP::setSensors(unsigned char sensors)
 {
 	return mpu_set_sensors(sensors);
+}
+
+inv_error_t MPU9250_DMP::setWakeOnMotion(unsigned short thresh, unsigned char time,
+    unsigned short lpa_freq)
+{
+#if defined ICM20689
+    icm_lp_motion_interrupt(thresh, lpa_freq);
+#else
+    mpu_lp_motion_interrupt(thresh, time, lpa_freq);
+#endif
+	return INV_SUCCESS;
 }
 
 bool MPU9250_DMP::dataReady()

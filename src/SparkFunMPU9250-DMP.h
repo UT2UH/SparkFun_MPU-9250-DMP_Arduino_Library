@@ -8,12 +8,6 @@ This library implements motion processing functions of Invensense's MPU-9250.
 It is based on their Emedded MotionDriver 6.12 library.
 	https://www.invensense.com/developers/software-downloads/
 
-Development environment specifics:
-Arduino IDE 1.6.12
-SparkFun 9DoF Razor IMU M0
-
-Supported Platforms:
-- ATSAMD21 (Arduino Zero, SparkFun SAMD21 Breakouts)
 ******************************************************************************/
 #ifndef _SPARKFUN_MPU9250_DMP_H_
 #define _SPARKFUN_MPU9250_DMP_H_
@@ -23,9 +17,10 @@ Supported Platforms:
 
 // Optimally, these defines would be passed as compiler options, but Arduino
 // doesn't give us a great way to do that.
-#define MPU9250
-#define AK8963_SECONDARY
-#define COMPASS_ENABLED
+//#define MPU9250
+//#define AK8963_SECONDARY
+//#define COMPASS_ENABLED
+#define ICM20689
 
 // Include the Invensense MPU9250 driver and DMP keys:
 extern "C" {
@@ -98,6 +93,47 @@ public:
 	//  disabled.
 	// Output: INV_SUCCESS (0) on success, otherwise error
 	inv_error_t setSensors(unsigned char sensors);
+
+	// @brief      Enters LP accel motion interrupt mode.
+	// The behaviour of this feature is very different between the MPU6050 and the
+	// MPU6500. Each chip's version of this feature is explained below.
+    //
+	// \n MPU6050:
+	// \n The hardware motion threshold can be between 32mg and 8160mg in 32mg
+	// increments.
+    //
+	// \n Low-power accel mode supports the following frequencies:
+	// \n 1.25Hz, 5Hz, 20Hz, 40Hz
+    //
+	// \n MPU6500:
+	// \n Unlike the MPU6050 version, the hardware does not "lock in" a reference
+	// sample. The hardware monitors the accel data and detects any large change
+	// over a short period of time.
+    //
+	// \n The hardware motion threshold can be between 4mg and 1020mg in 4mg
+	// increments.
+    //
+	// \n MPU6500 Low-power accel mode supports the following frequencies:
+	// \n 1.25Hz, 2.5Hz, 5Hz, 10Hz, 20Hz, 40Hz, 80Hz, 160Hz, 320Hz, 640Hz
+    //
+	// \n\n NOTES:
+	// \n The driver will round down @e thresh to the nearest supported value if
+	// an unsupported threshold is selected.
+	// \n To select a fractional wake-up frequency, round down the value passed to
+	// @e lpa_freq.
+	// \n The MPU6500 does not support a delay parameter. If this function is used
+	// for the MPU6500, the value passed to @e time will be ignored.
+	// \n To disable this mode, set @e lpa_freq to zero. The driver will restore
+	// the previous configuration.
+    //
+	// @param[in]  thresh      Motion threshold in mg.
+	// @param[in]  time        Duration in milliseconds that the accel data must
+	//                         exceed @e thresh before motion is reported.
+	// @param[in]  lpa_freq    Minimum sampling rate, or zero to disable.
+	// @return     INV_SUCCESS (0) on success, otherwise error
+
+	inv_error_t setWakeOnMotion(unsigned short thresh, unsigned char time,
+    unsigned short lpa_freq);
 	
 	// setGyroFSR(unsigned short) -- Sets the full-scale range of the gyroscope
 	// Input: Gyro DPS - 250, 500, 1000, or 2000
