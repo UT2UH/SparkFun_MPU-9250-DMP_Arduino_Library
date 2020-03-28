@@ -50,7 +50,7 @@ enum t_axisOrder {
 #define INT_50US_PULSE  0
 
 #define MAX_DMP_SAMPLE_RATE 200 // Maximum sample rate for the DMP FIFO (200Hz)
-#define FIFO_BUFFER_SIZE 512 // Max FIFO buffer size
+#define FIFO_BUFFER_SIZE 4096 // Max FIFO buffer size
 
 const signed char defaultOrientation[9] = {
 	1, 0, 0,

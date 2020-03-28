@@ -2918,7 +2918,7 @@ int mpu_set_dmp_state(unsigned char enable)
 
     if (enable) {
         if (!st.chip_cfg.dmp_loaded)
-            return -1;
+            return -15;
         /* Disable data ready interrupt. */
         set_int_enable(0);
         /* Disable bypass mode. */

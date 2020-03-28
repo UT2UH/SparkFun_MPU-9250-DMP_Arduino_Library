@@ -42,7 +42,7 @@ inv_error_t MPU9250_DMP::begin(void)
 	
 	mpu_set_bypass(1); // Place all slaves (including compass) on primary bus
 	
-	setSensors(INV_XYZ_GYRO | INV_XYZ_ACCEL | INV_XYZ_COMPASS);
+	setSensors(INV_XYZ_GYRO | INV_XYZ_ACCEL);
 	
 	_gSense = getGyroSens();
 	_aSense = getAccelSens();
@@ -371,7 +371,8 @@ inv_error_t MPU9250_DMP::dmpBegin(unsigned short features, unsigned short fifoRa
 	unsigned short rate = fifoRate;
 
 	if (dmpLoad() != INV_SUCCESS)
-		return INV_ERROR;
+		return -10;
+		//return INV_ERROR;
 	
 	// 3-axis and 6-axis LP quat are mutually exclusive.
 	// If both are selected, default to 3-axis
@@ -387,11 +388,13 @@ inv_error_t MPU9250_DMP::dmpBegin(unsigned short features, unsigned short fifoRa
 		dmp_enable_gyro_cal(1);
 	
 	if (dmpEnableFeatures(feat) != INV_SUCCESS)
-		return INV_ERROR;
+		//return INV_ERROR;
+		return -11;
 	
 	rate = constrain(rate, 1, 200);
 	if (dmpSetFifoRate(rate) != INV_SUCCESS)
-		return INV_ERROR;
+		//return INV_ERROR;
+		return -12;
 	
 	return mpu_set_dmp_state(1);
 }
