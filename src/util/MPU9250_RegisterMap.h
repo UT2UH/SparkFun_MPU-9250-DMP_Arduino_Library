@@ -1,20 +1,5 @@
-/******************************************************************************
-MPU9250_RegisterMap.h - MPU-9250 Digital Motion Processor Arduino Library 
-Jim Lindblom @ SparkFun Electronics
-original creation date: November 23, 2016
-https://github.com/sparkfun/SparkFun_MPU9250_DMP_Arduino_Library
-
-This library implements motion processing functions of Invensense's MPU-9250.
-It is based on their Emedded MotionDriver 6.12 library.
-	https://www.invensense.com/developers/software-downloads/
-
-Development environment specifics:
-Arduino IDE 1.6.12
-SparkFun 9DoF Razor IMU M0
-
-Supported Platforms:
-- ATSAMD21 (Arduino Zero, SparkFun SAMD21 Breakouts)
-******************************************************************************/
+/*
+ */
 #ifndef _MPU9250_REGISTER_MAP_H_
 #define _MPU9250_REGISTER_MAP_H_
 
@@ -38,6 +23,9 @@ enum mpu9250_register {
 	MPU9250_ACCEL_CONFIG_2 =    0x1D,
 	MPU9250_LP_ACCEL_ODR =      0x1E,
 	MPU9250_WOM_THR =           0x1F,
+	MPU9250_WOM_X_THR =         0x20,
+	MPU9250_WOM_Y_THR =         0x21,
+	MPU9250_WOM_Z_THR =         0x22,
 	MPU9250_FIFO_EN =           0x23,
 	MPU9250_I2C_MST_CTRL =      0x24,
 	MPU9250_I2C_SLV0_ADDR =     0x25,
@@ -57,7 +45,7 @@ enum mpu9250_register {
 	MPU9250_I2C_SLV4_DO =       0x33,
 	MPU9250_I2C_SLV4_CTRL =     0x34,
 	MPU9250_I2C_SLV4_DI =       0x35,
-	MPU9250_I2C_MST_STATUS =    0x36,
+	MPU9250_I2C_MST_STATUS =    0x36,	//FSYNC_INT in ICM20689 and MPU6886
 	MPU9250_INT_PIN_CFG =       0x37,
 	MPU9250_INT_ENABLE =        0x38,
 	MPU9250_INT_STATUS =        0x3A,
@@ -105,7 +93,7 @@ enum mpu9250_register {
 	MPU9250_I2C_SLV3_DO =       0x66,
 	MPU9250_I2C_MST_DELAY_CTRL =0x67,
 	MPU9250_SIGNAL_PATH_RESET = 0x68,
-	MPU9250_MOT_DETECT_CTRL =   0x69,
+	MPU9250_MOT_DETECT_CTRL =   0x69,	//ACCEL_INTEL_CTRL
 	MPU9250_USER_CTRL =         0x6A,
 	MPU9250_PWR_MGMT_1 =        0x6B,
 	MPU9250_PWR_MGMT_2 =        0x6C,

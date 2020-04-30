@@ -37,6 +37,7 @@
  * min(int a, int b)
  */
 #include <Arduino.h>
+#define ICM20689
 //#define MPU9250
 #include "arduino_mpu9250_i2c.h"
 #include "arduino_mpu9250_clk.h"
@@ -94,7 +95,12 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 #define AK8963_SECONDARY
 #endif                          /* #if defined AK8975_SECONDARY */
 
-//if ICM-20689 defined
+#elif defined ICM20689 || defined MPU6886  /* #if defined ICM20689 or MPU6886 */
+#if defined AK8963_SECONDARY
+#error "MPU6886/ICM20689 and AK8963_SECONDARY cannot both be defined."
+#elif defined AK8975_SECONDARY /* #if defined AK8963_SECONDARY */
+#error "MPU6886/ICM20689 and AK8975_SECONDARY cannot both be defined."
+#endif                          /* #if defined AK8963_SECONDARY */
 #endif                          /* #if defined MPU9150 */
 
 #if defined AK8975_SECONDARY || defined AK8963_SECONDARY
@@ -249,7 +255,7 @@ struct test_s {
     float min_g;
     float max_g;
     float max_accel_var;
-#if defined MPU6500 || defined ICM20689
+#if defined MPU6500 || defined ICM20689 
     float max_g_offset;
     unsigned short sample_wait_ms;
 #endif
@@ -756,13 +762,17 @@ int mpu_init(struct int_param_s *int_param)
 
    st.chip_cfg.accel_half = 0;
 
-#if defined MPU6500 || defined ICM20689
+#if defined MPU6500
     /* MPU6500 shares 4kB of memory between the DMP and the FIFO. Since the
      * first 3kB are needed by the DMP, we'll use the last 1kB for the FIFO.
      */
     data[0] = BIT_FIFO_SIZE_1024 | 0x8;
     if (i2c_write(st.hw->addr, st.reg->accel_cfg2, 1, data))
         return -1;
+#elif defined ICM20689
+    data[0] = BIT_FIFO_SIZE_1024 | 0x8;
+    if (i2c_write(st.hw->addr, st.reg->accel_cfg2, 1, data))
+        return -1;        
 #endif
 
     /* Set to invalid values to ensure no I2C writes are skipped. */
@@ -902,6 +912,33 @@ int mpu_lp_accel_mode(unsigned short rate)
     tmp[0] = BIT_LPA_CYCLE;
     if (i2c_write(st.hw->addr, st.reg->pwr_mgmt_1, 1, tmp))
         return -1;
+#elif defined ICM20689
+    /* Set wake frequency. */
+    if (rate == 1)
+        tmp[0] = INV_LPA_1_25HZ;
+    else if (rate == 2)
+        tmp[0] = INV_LPA_2_5HZ;
+    else if (rate <= 5)
+        tmp[0] = INV_LPA_5HZ;
+    else if (rate <= 10)
+        tmp[0] = INV_LPA_10HZ;
+    else if (rate <= 20)
+        tmp[0] = INV_LPA_20HZ;
+    else if (rate <= 40)
+        tmp[0] = INV_LPA_40HZ;
+    else if (rate <= 80)
+        tmp[0] = INV_LPA_80HZ;
+    else if (rate <= 160)
+        tmp[0] = INV_LPA_160HZ;
+    else if (rate <= 320)
+        tmp[0] = INV_LPA_320HZ;
+    else
+        tmp[0] = INV_LPA_640HZ;
+    if (i2c_write(st.hw->addr, st.reg->lp_accel_odr, 1, tmp))
+        return -1;
+    tmp[0] = BIT_LPA_CYCLE;
+    if (i2c_write(st.hw->addr, st.reg->pwr_mgmt_1, 1, tmp))
+        return -1;        
 #endif
     st.chip_cfg.sensors = INV_XYZ_ACCEL;
     st.chip_cfg.clk_src = 0;

@@ -17,10 +17,11 @@ It is based on their Emedded MotionDriver 6.12 library.
 
 // Optimally, these defines would be passed as compiler options, but Arduino
 // doesn't give us a great way to do that.
+#define ICM20689
+//#define MPU6886
 //#define MPU9250
 //#define AK8963_SECONDARY
 //#define COMPASS_ENABLED
-#define ICM20689
 
 // Include the Invensense MPU9250 driver and DMP keys:
 extern "C" {

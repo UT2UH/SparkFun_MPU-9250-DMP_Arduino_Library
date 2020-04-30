@@ -12,6 +12,7 @@
  *      @file       inv_mpu.h
  *      @brief      An I2C-based driver for Invensense gyroscopes.
  *      @details    This driver currently works for the following devices:
+ *                  ICM20689
  *                  MPU6050
  *                  MPU6500
  *                  MPU9150 (or MPU6050 w/ AK8975 on the auxiliary bus)
