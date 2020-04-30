@@ -1,9 +1,6 @@
 /************************************************************
 ICM20689_FIFO_AHRS
- AHRS example sketch for MPU-9250 DMP Arduino Library 
-Jim Lindblom @ SparkFun Electronics
-original creation date: November 23, 2016
-https://github.com/sparkfun/SparkFun_MPU9250_DMP_Arduino_Library
+https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 
 This example sketch demonstrates how to use the ICM20689's
 1K first-in, first-out (FIFO) buffer. The FIFO can be
@@ -41,9 +38,32 @@ void setup()
     }
   }
 
+    // Use setSensors to turn on or off MPU-9250 sensors.
+  // Any of the following defines can be combined:
+  // INV_XYZ_GYRO, INV_XYZ_ACCEL, INV_XYZ_COMPASS,
+  // INV_X_GYRO, INV_Y_GYRO, or INV_Z_GYRO
+  // Enable all sensors:
+  imu.setSensors(INV_XYZ_GYRO | INV_XYZ_ACCEL);
+
+  // Use setGyroFSR() and setAccelFSR() to configure the
+  // gyroscope and accelerometer full scale ranges.
+  // Gyro options are +/- 250, 500, 1000, or 2000 dps
+  imu.setGyroFSR(2000); // Set gyro to 2000 dps
+  // Accel options are +/- 2, 4, 8, or 16 g
+  imu.setAccelFSR(2); // Set accel to +/-2g
+  // Note: the MPU-9250's magnetometer FSR is set at 
+  // +/- 4912 uT (micro-tesla's)
+
+  // setLPF() can be used to set the digital low-pass filter
+  // of the accelerometer and gyroscope.
+  // Can be any of the following: 188, 98, 42, 20, 10, 5
+  // (values are in Hz).
+  imu.setLPF(5); // Set LPF corner frequency to 5Hz
+
   // The sample rate of the accel/gyro can be set using
   // setSampleRate. Acceptable values range from 4Hz to 1kHz
-  imu.setSampleRate(100); // Set sample rate to 100Hz
+  imu.setSampleRate(4); // Set sample rate to 4Hz
+
 
   // Use configureFifo to set which sensors should be stored
   // in the buffer.  
@@ -65,7 +85,9 @@ void loop()
     // Call updateFifo to update ax, ay, az, gx, gy, and/or gz
       if ( imu.updateFifo() == INV_SUCCESS)
       {
-
+        // computeEulerAngles can be used -- after updating the
+        // quaternion values -- to estimate roll, pitch, and yaw
+        imu.computeEulerAngles();
         printIMUData();
       }
     }
@@ -84,6 +106,7 @@ void printIMUData(void)
   float accelX = imu.calcAccel(imu.ax);
   float accelY = imu.calcAccel(imu.ay);
   float accelZ = imu.calcAccel(imu.az);
+
   float gyroX = imu.calcGyro(imu.gx);
   float gyroY = imu.calcGyro(imu.gy);
   float gyroZ = imu.calcGyro(imu.gz);
@@ -101,5 +124,13 @@ void printIMUData(void)
   Serial.println("R/P/Y: " + String(imu.roll) + ", " + String(imu.pitch) + ", " + String(imu.yaw));
   Serial.println("Time: " + String(imu.time) + " ms");
   Serial.println();
-
+/*
+Serial.printf("FLOAT:\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+			  imu.calcAccel(imu.ax), imu.calcAccel(imu.ay), imu.calcAccel(imu.az),
+			  imu.calcGyro(imu.gx), imu.calcGyro(imu.gy), imu.calcGyro(imu.gz));
+Serial.printf("Roll: %.2f\tPitch: %.2f\tYaw: %.2f\n",
+			  imu.roll,
+			  imu.pitch,
+			  imu.yaw);
+*/
 }
