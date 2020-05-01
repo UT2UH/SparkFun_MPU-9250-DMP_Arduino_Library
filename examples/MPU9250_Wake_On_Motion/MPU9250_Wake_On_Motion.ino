@@ -6,7 +6,7 @@ original creation date: July 17, 2019
 https://github.com/sparkfun/SparkFun_MPU9250_DMP_Arduino_Library
 
 This example sketch demonstrates how to itialize the 
-MPU-9250 to implement Wake-On-Motion interrupt.
+MPU-9250/MPU6500/ICM20689 to implement Wake-On-Motion interrupt.
 
 Development environment specifics:
 Arduino IDE 1.8.9
@@ -31,7 +31,10 @@ extern "C" {
 #include "util/inv_mpu_dmp_motion_driver.h"
 }
 // undef magnetometer if you use DMP only
+//#define ICM20689
+//#define MPU9250
 #define MPU6500  //  Used instead of #define MPU9250 to #undef AK8963_SECONDARY
+
 
 #define INTERRUPT_PIN 35   // Choose WOM interrupt pin
 
@@ -62,6 +65,9 @@ void setup()
   // Power Down Gyro and Compass
   imu.setSensors(INV_XYZ_ACCEL);
 
+	//_gSense = getGyroSens();
+	//_aSense = getAccelSens();
+
   // The interrupt level can either be active-high or low. Configure as active-low.
   // Options are INT_ACTIVE_LOW or INT_ACTIVE_HIGH
   imu.setIntLevel(INT_ACTIVE_LOW);
@@ -73,9 +79,9 @@ void setup()
   // an accelerometer data rate of 15.63 Hz. 
   // Only accelerometer is enabled in LP mode
   // The interrupt is 50us pulse.
-  if (imu.setWakeOnMotion(40,0,2) != INV_SUCCESS) {    
+  if (imu.setWakeOnMotion(40,1,2) != INV_SUCCESS) {    
     // Failed to initialize IMU, report somehow
-    Serial.println(F("IMU set up failed. Please check installed IMU IC."));    
+    Serial.println(F("IMU WOM set up failed. Please check installed IMU IC."));    
   }
 
   // Attach Interupt Service Routine to be called on device motion (to check angles for example)

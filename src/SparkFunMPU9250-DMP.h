@@ -169,15 +169,15 @@ public:
 	// Output: Currently set mag sensitivity (e.g. 0.15)
 	float getMagSens(void);
 	
-	// setLPF -- Sets the digital low-pass filter of the accel and gyro.
+	// setLPF -- Sets the digital low-pass filter of the gyro ONLY!
 	// Can be any of the following: 188, 98, 42, 20, 10, 5 (value in Hz)
 	// Input: 188, 98, 42, 20, 10, or 5 (defaults to 5 if incorrectly set)
 	// Output: INV_SUCCESS (0) on success, otherwise error
-	inv_error_t setLPF(unsigned short lpf);
-	// getLPF -- Returns the set value of the LPF.
+	inv_error_t setGyroLPF(unsigned short lpf);
+	// getLPF -- Returns the set value of gyro LPF.
 	//
 	// Output: 5, 10, 20, 42, 98, or 188 if set. 0 if the LPF is disabled.
-	unsigned short getLPF(void);
+	unsigned short getGyroLPF(void);
 	
 	// setSampleRate -- Set the gyroscope and accelerometer sample rate to a 
 	// value between 4Hz and 1000Hz (1kHz).

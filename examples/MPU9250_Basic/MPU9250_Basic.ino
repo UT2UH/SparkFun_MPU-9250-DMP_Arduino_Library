@@ -60,15 +60,16 @@ void setup()
   // Note: the MPU-9250's magnetometer FSR is set at 
   // +/- 4912 uT (micro-tesla's)
 
+  // The sample rate of the accel/gyro can be set using
+  // setSampleRate. Acceptable values range from 4Hz to 1kHz
+  imu.setSampleRate(10); // Set sample rate to 10Hz
+  
   // setLPF() can be used to set the digital low-pass filter
   // of the accelerometer and gyroscope.
   // Can be any of the following: 188, 98, 42, 20, 10, 5
   // (values are in Hz).
   imu.setLPF(5); // Set LPF corner frequency to 5Hz
 
-  // The sample rate of the accel/gyro can be set using
-  // setSampleRate. Acceptable values range from 4Hz to 1kHz
-  imu.setSampleRate(10); // Set sample rate to 10Hz
 
   // Likewise, the compass (magnetometer) sample rate can be
   // set using the setCompassSampleRate() function.

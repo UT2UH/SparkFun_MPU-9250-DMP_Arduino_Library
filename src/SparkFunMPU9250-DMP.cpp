@@ -136,15 +136,15 @@ unsigned short MPU9250_DMP::getMagFSR(void)
 	return 0;
 }
 
-inv_error_t MPU9250_DMP::setLPF(unsigned short lpf)
+inv_error_t MPU9250_DMP::setGyroLPF(unsigned short lpf)
 {
-	return mpu_set_lpf(lpf);
+	return mpu_set_gyro_lpf(lpf);
 }
 
-unsigned short MPU9250_DMP::getLPF(void)
+unsigned short MPU9250_DMP::getGyroLPF(void)
 {
 	unsigned short tmp;
-	if (mpu_get_lpf(&tmp) == INV_SUCCESS)
+	if (mpu_get_gyro_lpf(&tmp) == INV_SUCCESS)
 	{
 		return tmp;
 	}
@@ -274,11 +274,7 @@ inv_error_t MPU9250_DMP::setSensors(unsigned char sensors)
 inv_error_t MPU9250_DMP::setWakeOnMotion(unsigned short thresh, unsigned char time,
     unsigned short lpa_freq)
 {
-#if defined ICM20689
-    icm_lp_motion_interrupt(thresh, lpa_freq);
-#else
     mpu_lp_motion_interrupt(thresh, time, lpa_freq);
-#endif
 	return INV_SUCCESS;
 }
 

@@ -67,17 +67,23 @@ int mpu_set_bypass(unsigned char bypass_on);
 
 /* Configuration APIs */
 int mpu_lp_accel_mode(unsigned short rate);
+int mpu_lp_gyro_mode(unsigned short rate);
 int mpu_lp_motion_interrupt(unsigned short thresh, unsigned char time,
     unsigned short lpa_freq);
-int icm_lp_motion_interrupt(unsigned short thresh, unsigned short lpa_freq);    
+
+int mpu_lp_6axis_wom_mode(unsigned short thresh, unsigned short lpa_freq);
+
 int mpu_set_int_level(unsigned char active_low);
 int mpu_set_int_latched(unsigned char enable);
 
 int mpu_set_dmp_state(unsigned char enable);
 int mpu_get_dmp_state(unsigned char *enabled);
 
-int mpu_get_lpf(unsigned short *lpf);
-int mpu_set_lpf(unsigned short lpf);
+int mpu_get_accel_lpf(unsigned short *lpf);
+int mpu_set_accel_lpf(unsigned short lpf);
+
+int mpu_get_gyro_lpf(unsigned short *lpf);
+int mpu_set_gyro_lpf(unsigned short lpf);
 
 int mpu_get_gyro_fsr(unsigned short *fsr);
 int mpu_set_gyro_fsr(unsigned short fsr);
